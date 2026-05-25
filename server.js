@@ -1,14 +1,19 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const pool = require('./db');
+const pool = require("./db");
 
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(express.json());
 app.use(express.static(__dirname));
 
-console.log("SERVER RUNNING");
+// Debug (helps Render logs)
+console.log("APP STARTING...");
+console.log("PORT:", PORT);
+console.log("DATABASE:", process.env.DATABASE_URL ? "CONNECTED" : "MISSING");
 
+// Helper function
 function getRemarks(g) {
   if (g <= 1.25) return "Excellent";
   if (g <= 1.75) return "Very Good";
@@ -18,18 +23,24 @@ function getRemarks(g) {
   return "Failed";
 }
 
-/* GET */
-app.get('/api/grades', async (req, res) => {
+// TEST ROUTE (important for checking if site is alive)
+app.get("/", (req, res) => {
+  res.send("Server is running successfully 🚀");
+});
+
+// GET grades
+app.get("/api/grades", async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM grades ORDER BY id ASC');
+    const result = await pool.query("SELECT * FROM grades ORDER BY id ASC");
     res.json(result.rows);
   } catch (err) {
-    res.status(500).send(err.message);
+    console.error(err);
+    res.status(500).send("Database error");
   }
 });
 
-/* POST */
-app.post('/api/grades', async (req, res) => {
+// POST grade
+app.post("/api/grades", async (req, res) => {
   try {
     const { subject, grade, units } = req.body;
 
@@ -46,22 +57,24 @@ app.post('/api/grades', async (req, res) => {
     );
 
     res.json(result.rows[0]);
-
   } catch (err) {
-    res.status(500).send(err.message);
+    console.error("POST ERROR:", err);
+    res.status(500).send("Insert failed");
   }
 });
 
-/* DELETE */
-app.delete('/api/grades/:id', async (req, res) => {
+// DELETE grade
+app.delete("/api/grades/:id", async (req, res) => {
   try {
-    await pool.query('DELETE FROM grades WHERE id = $1', [req.params.id]);
+    await pool.query("DELETE FROM grades WHERE id = $1", [req.params.id]);
     res.json({ message: "Deleted" });
   } catch (err) {
-    res.status(500).send(err.message);
+    console.error(err);
+    res.status(500).send("Delete failed");
   }
 });
 
+// START SERVER (VERY IMPORTANT FOR RENDER)
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log(`Server running on port ${PORT}`);
 });
