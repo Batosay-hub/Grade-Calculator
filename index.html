@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Grade Calculator</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div class="login-container" id="loginBox">
+
+    <h1>Login</h1>
+
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Username" required>
+
+      <input type="password" id="password" placeholder="Password" required>
+
+      <button type="submit">Login</button>
+    </form>
+
+  </div>
+
+  <!-- GRADE SYSTEM -->
+  <div class="container" id="gradeSystem">
+
+    <img src="plsp.jpg" class="top-image" alt="Logo">
+
+    <header>
+      <h1>Student Grade Calculator</h1>
+      <p>Compute, manage, and view average.</p>
+    </header>
+
+    <form id="studentForm">
+
+      <input type="text" id="subjectName" placeholder="Subject Name" required>
+
+      <input type="number" id="subjectGrade" placeholder="Grade" step="0.25" required>
+
+      <input type="number" id="subjectUnits" placeholder="Units" required>
+
+      <button type="submit">Add Subject</button>
+
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Grade</th>
+          <th>Units</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+
+      <tbody id="subjectTableBody"></tbody>
+    </table>
+
+    <section class="average-section">
+      <h2>Average Grade</h2>
+      <p id="averageGrade">0.00</p>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
