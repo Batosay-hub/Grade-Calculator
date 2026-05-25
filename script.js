@@ -1,4 +1,3 @@
-
 /* =========================
    LOGIN SYSTEM
 ========================= */
@@ -33,6 +32,17 @@ const averageDisplay = document.getElementById("averageGrade");
 
 
 /* =========================
+   ALLOWED COLLEGE GRADES
+========================= */
+
+const allowedGrades = [
+  1.00, 1.25, 1.50, 1.75,
+  2.00, 2.25, 2.50, 2.75,
+  3.00, 4.00, 5.00
+];
+
+
+/* =========================
    LOCAL DATA STORAGE
 ========================= */
 
@@ -49,12 +59,22 @@ function getRemarks(g) {
   if (g <= 2.25) return "Good";
   if (g <= 2.75) return "Satisfactory";
   if (g <= 3.00) return "Passed";
+  if (g === 4.00) return "Conditional / For Removal";
   return "Failed";
 }
 
 
 /* =========================
-   FORM SUBMIT (SAFE + FETCH)
+   VALIDATE GRADE
+========================= */
+
+function isValidGrade(grade) {
+  return allowedGrades.includes(grade);
+}
+
+
+/* =========================
+   ADD SUBJECT
 ========================= */
 
 form.addEventListener("submit", async function (e) {
@@ -69,7 +89,11 @@ form.addEventListener("submit", async function (e) {
     return;
   }
 
-  // 👉 1. update UI first (NEVER BREAK CALCULATOR)
+  if (!isValidGrade(grade)) {
+    alert("Invalid grade! Allowed: 1.00, 1.25, ... 4.00, 5.00");
+    return;
+  }
+
   const newEntry = {
     id: Date.now(),
     subject,
@@ -82,32 +106,27 @@ form.addEventListener("submit", async function (e) {
   updateTable();
   form.reset();
 
-  // 👉 2. send to backend (SAFE FETCH)
+  // optional backend save
   try {
-    const res = await fetch("/api/grades", {
+    await fetch("/api/grades", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        subject,
-        grade,
-        units
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subject, grade, units })
     });
-
-    if (!res.ok) {
-      console.log("Server error:", res.status);
-      return;
-    }
-
-    const data = await res.json();
-    console.log("Saved to DB:", data);
-
   } catch (err) {
-    console.error("Fetch error:", err);
+    console.error(err);
   }
 });
+
+
+/* =========================
+   DELETE FUNCTION
+========================= */
+
+function deleteGrade(id) {
+  grades = grades.filter(item => item.id !== id);
+  updateTable();
+}
 
 
 /* =========================
@@ -115,13 +134,11 @@ form.addEventListener("submit", async function (e) {
 ========================= */
 
 function updateTable() {
-
   tableBody.innerHTML = "";
 
   let total = 0;
 
   grades.forEach(item => {
-
     total += item.grade;
 
     tableBody.innerHTML += `
@@ -130,6 +147,12 @@ function updateTable() {
         <td>${item.grade.toFixed(2)}</td>
         <td>${item.units}</td>
         <td>${item.remarks}</td>
+        <td>
+          <button onclick="deleteGrade(${item.id})" 
+            style="background:red;color:white;border:none;padding:5px 10px;cursor:pointer;">
+            Delete
+          </button>
+        </td>
       </tr>
     `;
   });
