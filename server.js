@@ -2,16 +2,12 @@ const express = require('express');
 const app = express();
 const pool = require('./db');
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(__dirname));
 
 console.log("SERVER RUNNING");
-
-pool.connect()
-  .then(() => console.log("POSTGRES CONNECTED"))
-  .catch(err => console.error(err));
 
 function getRemarks(g) {
   if (g <= 1.25) return "Excellent";
@@ -34,11 +30,7 @@ app.get('/api/grades', async (req, res) => {
 
 /* POST */
 app.post('/api/grades', async (req, res) => {
-
-  console.log("BODY RECEIVED:", req.body);
-
   try {
-
     const { subject, grade, units } = req.body;
 
     const result = await pool.query(
@@ -53,18 +45,13 @@ app.post('/api/grades', async (req, res) => {
       ]
     );
 
-    console.log("INSERTED:", result.rows[0]);
-
     res.json(result.rows[0]);
 
   } catch (err) {
-
-    console.error("POST ERROR:", err);
-
     res.status(500).send(err.message);
-
   }
 });
+
 /* DELETE */
 app.delete('/api/grades/:id', async (req, res) => {
   try {
@@ -76,5 +63,5 @@ app.delete('/api/grades/:id', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("http://localhost:" + PORT);
+  console.log("Server running on port " + PORT);
 });
