@@ -44,6 +44,17 @@ app.post("/api/grades", async (req, res) => {
   try {
     const { subject, grade, units } = req.body;
 
+    const allowedGrades = [
+      1, 1.25, 1.5, 1.75,
+      2, 2.25, 2.5, 2.75,
+      3, 3.25, 3.5, 3.75,
+      4, 5
+    ];
+
+    if (!allowedGrades.includes(Number(grade))) {
+      return res.status(400).json({ error: "Invalid grade value" });
+    }
+
     await pool.query(
       "INSERT INTO grades(subject, grade, units) VALUES($1,$2,$3)",
       [subject, grade, units]

@@ -122,8 +122,20 @@ form.addEventListener("submit", async (e) => {
   const grade = parseFloat(gradeInput.value);
   const units = parseInt(unitsInput.value);
 
+  const allowedGrades = [
+    1, 1.25, 1.5, 1.75,
+    2, 2.25, 2.5, 2.75,
+    3, 3.25, 3.5, 3.75,
+    4, 5
+  ];
+
   if (!subject || isNaN(grade) || isNaN(units)) {
     alert("Complete all fields");
+    return;
+  }
+
+  if (!allowedGrades.includes(grade)) {
+    alert("Invalid grade! Allowed: 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 5");
     return;
   }
 
@@ -139,7 +151,7 @@ form.addEventListener("submit", async (e) => {
     });
 
     form.reset();
-    loadGrades(); // refresh from DB
+    loadGrades();
 
   } catch (err) {
     console.log(err);
