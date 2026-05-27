@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const session = require("express-session");
 const { Pool } = require("pg");
 
 const app = express();
@@ -7,7 +8,6 @@ const app = express();
 /* =========================
    DATABASE CONNECTION
 ========================= */
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -18,199 +18,142 @@ const pool = new Pool({
 /* =========================
    MIDDLEWARE
 ========================= */
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
-app.use(cors());
 app.use(express.json());
 
-/* IMPORTANT */
+app.use(session({
+  secret: "grade-secret-key",
+  resave: false,
+  saveUninitialized: false
+}));
+
 app.use(express.static(__dirname));
 
 /* =========================
    REGISTER
 ========================= */
-
 app.post("/api/register", async (req, res) => {
-
   try {
-
     const { username, password } = req.body;
 
     const existing = await pool.query(
-
       "SELECT * FROM users WHERE username=$1",
-
       [username]
-
     );
 
-    if(existing.rows.length > 0){
-
-      return res.status(400).json({
-        error: "Username already exists"
-      });
-
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: "Username already exists" });
     }
 
     await pool.query(
-
       "INSERT INTO users(username,password) VALUES($1,$2)",
-
       [username, password]
-
     );
 
-    res.json({
-      success: true
-    });
+    res.json({ success: true });
 
-  } catch(err){
-
+  } catch (err) {
     console.log(err);
-
-    res.status(500).json({
-      error: "Server Error"
-    });
-
+    res.status(500).json({ error: "Server Error" });
   }
-
 });
 
 /* =========================
-   LOGIN
+   LOGIN (AUTO SESSION)
 ========================= */
-
 app.post("/api/login", async (req, res) => {
-
   try {
-
     const { username, password } = req.body;
 
     const result = await pool.query(
-
       "SELECT * FROM users WHERE username=$1 AND password=$2",
-
       [username, password]
-
     );
 
-    if(result.rows.length === 0){
-
-      return res.status(401).json({
-        error: "Invalid Login"
-      });
-
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Invalid Login" });
     }
 
-    res.json({
-      success: true,
-      username: result.rows[0].username
-    });
+    // AUTO LOGIN SESSION
+    req.session.user = username;
 
-  } catch(err){
+    res.json({ success: true });
 
+  } catch (err) {
     console.log(err);
-
-    res.status(500).json({
-      error: "Server Error"
-    });
-
+    res.status(500).json({ error: "Server Error" });
   }
-
 });
 
 /* =========================
-   SAVE GRADE
+   SAVE GRADE (NO USERNAME INPUT)
 ========================= */
-
 app.post("/api/grades", async (req, res) => {
-
   try {
+    const username = req.session.user;
 
-    const {
-      username,
-      subject,
-      grade,
-      units
-    } = req.body;
+    if (!username) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    const { subject, grade, units } = req.body;
 
     await pool.query(
-
-      `INSERT INTO grades
-      (username,subject,grade,units)
-      VALUES($1,$2,$3,$4)`,
-
+      `INSERT INTO grades (username, subject, grade, units)
+       VALUES ($1, $2, $3, $4)`,
       [username, subject, grade, units]
-
     );
 
-    res.json({
-      success: true
-    });
+    res.json({ success: true });
 
-  } catch(err){
-
+  } catch (err) {
     console.log(err);
-
-    res.status(500).json({
-      error: "Server Error"
-    });
-
+    res.status(500).json({ error: "Server Error" });
   }
-
 });
 
 /* =========================
-   GET USER GRADES
+   GET GRADES (AUTO USER)
 ========================= */
-
-app.get("/api/grades/:username", async (req, res) => {
-
+app.get("/api/grades", async (req, res) => {
   try {
+    const username = req.session.user;
 
-    const { username } = req.params;
+    if (!username) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
 
     const result = await pool.query(
-
       `SELECT * FROM grades
        WHERE username=$1
        ORDER BY id DESC`,
-
       [username]
-
     );
 
     res.json(result.rows);
 
-  } catch(err){
-
+  } catch (err) {
     console.log(err);
-
-    res.status(500).json({
-      error: "Server Error"
-    });
-
+    res.status(500).json({ error: "Server Error" });
   }
-
 });
 
 /* =========================
    TEST ROUTE
 ========================= */
-
 app.get("/", (req, res) => {
-
   res.send("Server Running");
-
 });
 
 /* =========================
    START SERVER
 ========================= */
-
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
-
   console.log(`Server running on port ${PORT}`);
-
 });
