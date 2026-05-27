@@ -7,7 +7,7 @@ const { Pool } = require("pg");
 const app = express();
 
 /* =========================
-   DATABASE
+   DATABASE CONNECTION
 ========================= */
 
 const pool = new Pool({
@@ -18,34 +18,66 @@ const pool = new Pool({
 });
 
 /* =========================
-   MIDDLEWARE
+   DATABASE TEST
 ========================= */
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(__dirname));
+pool.connect()
+  .then(() => {
+    console.log("DATABASE CONNECTED");
+  })
+  .catch((err) => {
+    console.log("DATABASE ERROR");
+    console.log(err);
+  });
 
 /* =========================
    CREATE TABLES
 ========================= */
 
-pool.query(`
-CREATE TABLE IF NOT EXISTS users (
-  id SERIAL PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL
-);
-`);
+async function createTables() {
 
-pool.query(`
-CREATE TABLE IF NOT EXISTS grades (
-  id SERIAL PRIMARY KEY,
-  username TEXT NOT NULL,
-  subject TEXT NOT NULL,
-  grade NUMERIC NOT NULL,
-  units INT NOT NULL
-);
-`);
+  try {
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS grades (
+        id SERIAL PRIMARY KEY,
+        username TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        grade NUMERIC NOT NULL,
+        units INT NOT NULL
+      );
+    `);
+
+    console.log("TABLES READY");
+
+  } catch (err) {
+
+    console.log("TABLE ERROR");
+    console.log(err);
+
+  }
+
+}
+
+createTables();
+
+/* =========================
+   MIDDLEWARE
+========================= */
+
+app.use(cors());
+
+app.use(express.json());
+
+app.use(express.static(__dirname));
 
 /* =========================
    REGISTER
@@ -63,9 +95,11 @@ app.post("/api/register", async (req, res) => {
     );
 
     if (existing.rows.length > 0) {
+
       return res.status(400).json({
         error: "Username already exists"
       });
+
     }
 
     await pool.query(
@@ -168,7 +202,7 @@ app.post("/api/grades", async (req, res) => {
 });
 
 /* =========================
-   LOAD GRADES
+   GET GRADES
 ========================= */
 
 app.post("/api/grades/get", async (req, res) => {
@@ -203,7 +237,9 @@ app.post("/api/grades/get", async (req, res) => {
 ========================= */
 
 app.get("/", (req, res) => {
+
   res.send("Server Running");
+
 });
 
 /* =========================
@@ -213,5 +249,7 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
+
   console.log(`Server running on port ${PORT}`);
+
 });
