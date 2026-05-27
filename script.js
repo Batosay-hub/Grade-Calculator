@@ -170,27 +170,25 @@ function render() {
   let totalWeighted = 0;
   let totalUnits = 0;
 
-  grades.forEach(g => {
-    const grade = Number(g.grade);
-    const units = Number(g.units);
-
-    totalWeighted += grade * units;
-    totalUnits += units;
-
-    tableBody.innerHTML += `
-      <tr>
-        <td>${g.subject}</td>
-        <td>${grade.toFixed(2)}</td>
-        <td>${units}</td>
-        <td>
-        <td>
-        <button onclick="deleteGrade(${id})">Delete</button>
-      </td>
-        </td>
-      </tr>
-    `;
-  });
-
+    grades.forEach(g => {
+      const grade = Number(g.grade);
+      const units = Number(g.units);
+    
+      totalWeighted += grade * units;
+      totalUnits += units;
+    
+      tableBody.innerHTML += `
+        <tr>
+          <td>${g.subject}</td>
+          <td>${grade.toFixed(2)}</td>
+          <td>${units}</td>
+          <td>${g.remarks || ""}</td>
+          <td>
+            <button onclick="deleteGrade(${g.id})">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
   const gwa = totalUnits > 0
     ? (totalWeighted / totalUnits).toFixed(2)
     : "0.00";
