@@ -83,44 +83,26 @@ app.use(express.static(__dirname));
    REGISTER
 ========================= */
 
-app.post("/api/register", async (req, res) => {
-
+app.post("/api/grades", async (req, res) => {
   try {
+    const { username, subject, grade, units } = req.body;
 
-    const { username, password } = req.body;
-
-    const existing = await pool.query(
-      "SELECT * FROM users WHERE username=$1",
-      [username]
-    );
-
-    if (existing.rows.length > 0) {
-
-      return res.status(400).json({
-        error: "Username already exists"
-      });
-
+    if (!username || !subject || !grade || !units) {
+      return res.status(400).json({ error: "Missing fields" });
     }
 
     await pool.query(
-      "INSERT INTO users(username,password) VALUES($1,$2)",
-      [username, password]
+      `INSERT INTO grades (username, subject, grade, units)
+       VALUES ($1, $2, $3, $4)`,
+      [username, subject, grade, units]
     );
 
-    res.json({
-      success: true
-    });
+    res.json({ success: true });
 
   } catch (err) {
-
     console.log(err);
-
-    res.status(500).json({
-      error: "Server Error"
-    });
-
+    res.status(500).json({ error: "Server Error" });
   }
-
 });
 
 /* =========================
