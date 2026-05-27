@@ -115,8 +115,6 @@ loginForm.addEventListener("submit", function (e) {
     loginBox.style.display = "none";
     gradeSystem.style.display = "block";
 
-    loadGrades();
-
   } else {
 
     alert("Wrong username or password");
@@ -308,35 +306,5 @@ function updateTable(){
     : "0.00";
 
   averageDisplay.textContent = avg;
-
-}
-
-/* =========================
-   LOAD DATABASE DATA
-========================= */
-
-async function loadGrades(){
-
-  try{
-
-    const response = await fetch("/api/grades");
-
-    const data = await response.json();
-
-    grades = data.map(item => ({
-      id: item.id,
-      subject: item.subject,
-      grade: parseFloat(item.grade),
-      units: parseInt(item.units),
-      remarks: getRemarks(parseFloat(item.grade))
-    }));
-
-    updateTable();
-
-  } catch(err){
-
-    console.error(err);
-
-  }
 
 }
