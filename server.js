@@ -6,7 +6,7 @@ const { Pool } = require("pg");
 const app = express();
 
 /* =========================
-   DATABASE CONNECTION
+   DATABASE
 ========================= */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -21,36 +21,39 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 /* =========================
-   FORCE DATABASE CHECK (DEBUG)
-========================= */
-pool.connect()
-  .then(() => console.log("DATABASE CONNECTED"))
-  .catch(err => console.log("DB ERROR:", err));
-
-/* =========================
-   CREATE TABLE SAFELY
+   CREATE TABLE (SAFE)
 ========================= */
 pool.query(`
 CREATE TABLE IF NOT EXISTS grades (
   id SERIAL PRIMARY KEY,
   subject TEXT,
   grade NUMERIC,
-  units INT
+  units INT,
+  is_deleted BOOLEAN DEFAULT FALSE
 );
 `);
 
 /* =========================
-   HOME → LOAD WEBSITE
+   HOME
 ========================= */
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* =========================
-   TEST API (IMPORTANT FOR DEBUGGING)
+   GET GRADES (ONLY ACTIVE)
 ========================= */
-app.get("/api/test", (req, res) => {
-  res.json({ status: "API WORKING" });
+app.get("/api/grades", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM grades WHERE is_deleted = FALSE ORDER BY id DESC"
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "DB error" });
+  }
 });
 
 /* =========================
@@ -59,10 +62,6 @@ app.get("/api/test", (req, res) => {
 app.post("/api/grades", async (req, res) => {
   try {
     const { subject, grade, units } = req.body;
-
-    if (!subject || grade == null || units == null) {
-      return res.status(400).json({ error: "Missing fields" });
-    }
 
     await pool.query(
       `INSERT INTO grades (subject, grade, units)
@@ -73,44 +72,27 @@ app.post("/api/grades", async (req, res) => {
     res.json({ success: true });
 
   } catch (err) {
-    console.log("SAVE ERROR:", err);
+    console.log(err);
     res.status(500).json({ error: "DB error" });
   }
 });
 
 /* =========================
-   GET GRADES (THIS FIXES YOUR 404 ISSUE)
-========================= */
-app.get("/api/grades", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT * FROM grades ORDER BY id DESC`
-    );
-
-    res.json(result.rows);
-
-  } catch (err) {
-    console.log("GET ERROR:", err);
-    res.status(500).json({ error: "DB error" });
-  }
-});
-
-/* =========================
-   DELETE GRADE
+   SOFT DELETE
 ========================= */
 app.delete("/api/grades/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
     await pool.query(
-      `DELETE FROM grades WHERE id=$1`,
+      "UPDATE grades SET is_deleted = TRUE WHERE id=$1",
       [id]
     );
 
     res.json({ success: true });
 
   } catch (err) {
-    console.log("DELETE ERROR:", err);
+    console.log(err);
     res.status(500).json({ error: "DB error" });
   }
 });
