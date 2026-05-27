@@ -1,80 +1,182 @@
 const express = require("express");
-const app = express();
+const cors = require("cors");
 const pool = require("./db");
 
-const PORT = process.env.PORT || 3000;
+const app = express();
 
-// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static("public"));
 
-// Debug (helps Render logs)
-console.log("APP STARTING...");
-console.log("PORT:", PORT);
-console.log("DATABASE:", process.env.DATABASE_URL ? "CONNECTED" : "MISSING");
+/* =========================
+   REGISTER
+========================= */
 
-// Helper function
-function getRemarks(g) {
-  if (g <= 1.25) return "Excellent";
-  if (g <= 1.75) return "Very Good";
-  if (g <= 2.25) return "Good";
-  if (g <= 2.75) return "Satisfactory";
-  if (g <= 3.00) return "Passed";
-  return "Failed";
-}
+app.post("/api/register", async (req, res) => {
 
-// TEST ROUTE (important for checking if site is alive)
-app.get("/", (req, res) => {
-  res.send("Server is running successfully 🚀");
-});
-
-// GET grades
-app.get("/api/grades", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM grades ORDER BY id ASC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Database error");
-  }
-});
 
-// POST grade
-app.post("/api/grades", async (req, res) => {
-  try {
-    const { subject, grade, units } = req.body;
+    const { username, password } = req.body;
 
-    const result = await pool.query(
-      `INSERT INTO grades (subject, grade, units, remarks)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [
-        subject,
-        parseFloat(grade),
-        parseInt(units) || 0,
-        getRemarks(parseFloat(grade))
-      ]
+    const existing = await pool.query(
+      "SELECT * FROM users WHERE username=$1",
+      [username]
     );
 
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("POST ERROR:", err);
-    res.status(500).send("Insert failed");
+    if(existing.rows.length > 0){
+
+      return res.status(400).json({
+        error: "Username already exists"
+      });
+
+    }
+
+    await pool.query(
+
+      "INSERT INTO users(username,password) VALUES($1,$2)",
+
+      [username, password]
+
+    );
+
+    res.json({
+      success: true
+    });
+
+  } catch(err){
+
+    console.log(err);
+
+    res.status(500).json({
+      error: "Server Error"
+    });
+
   }
+
 });
 
-// DELETE grade
-app.delete("/api/grades/:id", async (req, res) => {
+/* =========================
+   LOGIN
+========================= */
+
+app.post("/api/login", async (req, res) => {
+
   try {
-    await pool.query("DELETE FROM grades WHERE id = $1", [req.params.id]);
-    res.json({ message: "Deleted" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Delete failed");
+
+    const { username, password } = req.body;
+
+    const result = await pool.query(
+
+      "SELECT * FROM users WHERE username=$1 AND password=$2",
+
+      [username, password]
+
+    );
+
+    if(result.rows.length === 0){
+
+      return res.status(401).json({
+        error: "Invalid Login"
+      });
+
+    }
+
+    res.json({
+      success: true,
+      username: result.rows[0].username
+    });
+
+  } catch(err){
+
+    console.log(err);
+
+    res.status(500).json({
+      error: "Server Error"
+    });
+
   }
+
 });
 
-// START SERVER (VERY IMPORTANT FOR RENDER)
+/* =========================
+   SAVE GRADE
+========================= */
+
+app.post("/api/grades", async (req, res) => {
+
+  try {
+
+    const {
+      username,
+      subject,
+      grade,
+      units
+    } = req.body;
+
+    await pool.query(
+
+      `INSERT INTO grades
+      (username,subject,grade,units)
+      VALUES($1,$2,$3,$4)`,
+
+      [username, subject, grade, units]
+
+    );
+
+    res.json({
+      success: true
+    });
+
+  } catch(err){
+
+    console.log(err);
+
+    res.status(500).json({
+      error: "Server Error"
+    });
+
+  }
+
+});
+
+/* =========================
+   GET USER GRADES
+========================= */
+
+app.get("/api/grades/:username", async (req, res) => {
+
+  try {
+
+    const { username } = req.params;
+
+    const result = await pool.query(
+
+      `SELECT * FROM grades
+       WHERE username=$1
+       ORDER BY id DESC`,
+
+      [username]
+
+    );
+
+    res.json(result.rows);
+
+  } catch(err){
+
+    console.log(err);
+
+    res.status(500).json({
+      error: "Server Error"
+    });
+
+  }
+
+});
+
+const PORT = process.env.PORT || 10000;
+
 app.listen(PORT, () => {
+
   console.log(`Server running on port ${PORT}`);
+
 });
