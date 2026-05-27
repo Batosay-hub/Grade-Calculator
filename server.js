@@ -1,12 +1,29 @@
 const express = require("express");
 const cors = require("cors");
-const pool = require("./db");
+const { Pool } = require("pg");
 
 const app = express();
 
+/* =========================
+   DATABASE CONNECTION
+========================= */
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+/* =========================
+   MIDDLEWARE
+========================= */
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
+
+/* IMPORTANT */
+app.use(express.static(__dirname));
 
 /* =========================
    REGISTER
@@ -19,8 +36,11 @@ app.post("/api/register", async (req, res) => {
     const { username, password } = req.body;
 
     const existing = await pool.query(
+
       "SELECT * FROM users WHERE username=$1",
+
       [username]
+
     );
 
     if(existing.rows.length > 0){
@@ -172,6 +192,20 @@ app.get("/api/grades/:username", async (req, res) => {
   }
 
 });
+
+/* =========================
+   TEST ROUTE
+========================= */
+
+app.get("/", (req, res) => {
+
+  res.send("Server Running");
+
+});
+
+/* =========================
+   START SERVER
+========================= */
 
 const PORT = process.env.PORT || 10000;
 
