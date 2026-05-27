@@ -208,13 +208,17 @@ table th{
   transition: 0.3s;
 }
 
-table button {
-  background-color: inherit;
-  color: inherit;
-  padding: 10px;
+.action-btn {
+  background-color: #4CAF50; /* same green as Add button */
+  color: white;
   border: none;
+  padding: 8px 12px;
   cursor: pointer;
-  font: inherit;
+  border-radius: 5px;
+}
+
+.action-btn:hover {
+  background-color: #45a049;
 }
 
 .logout-btn:hover{
