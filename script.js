@@ -1,10 +1,4 @@
 /* =========================
-   USERS (LOCAL LOGIN ONLY)
-========================= */
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let currentUser = null;
-
-/* =========================
    ELEMENTS
 ========================= */
 const loginBox = document.getElementById("loginBox");
@@ -22,8 +16,14 @@ const form = document.getElementById("studentForm");
 const subjectInput = document.getElementById("subjectName");
 const gradeInput = document.getElementById("subjectGrade");
 const unitsInput = document.getElementById("subjectUnits");
+
 const tableBody = document.getElementById("subjectTableBody");
 const averageDisplay = document.getElementById("averageGrade");
+
+/* =========================
+   LOGIN STATE (LOCAL ONLY)
+========================= */
+let currentUser = null;
 
 /* =========================
    SWITCH UI
@@ -39,8 +39,10 @@ backToLogin.onclick = () => {
 };
 
 /* =========================
-   REGISTER
+   REGISTER (LOCAL ONLY)
 ========================= */
+let users = JSON.parse(localStorage.getItem("users")) || [];
+
 registerForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
@@ -60,7 +62,7 @@ registerForm.addEventListener("submit", (e) => {
 });
 
 /* =========================
-   LOGIN
+   LOGIN (LOCAL ONLY)
 ========================= */
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -80,7 +82,7 @@ loginForm.addEventListener("submit", (e) => {
 
     loadGrades();
   } else {
-    alert("Wrong username or password");
+    alert("Wrong login");
   }
 });
 
@@ -89,17 +91,29 @@ loginForm.addEventListener("submit", (e) => {
 ========================= */
 logoutBtn.onclick = () => {
   currentUser = null;
+
   gradeSystem.style.display = "none";
   loginBox.style.display = "block";
 };
 
 /* =========================
-   GRADES ARRAY
+   LOAD GRADES (DATABASE ONLY)
 ========================= */
 let grades = [];
 
+async function loadGrades() {
+  try {
+    const res = await fetch("/api/grades");
+    grades = await res.json();
+
+    render();
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 /* =========================
-   ADD GRADE (SAVE TO DB)
+   ADD GRADE (DATABASE ONLY)
 ========================= */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -113,20 +127,8 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  const newGrade = {
-    id: Date.now(),
-    subject,
-    grade,
-    units
-  };
-
-  grades.push(newGrade);
-  render();
-
-  form.reset();
-
   try {
-    await fetch("https://grade-calculator-s7mr.onrender.com/api/grades", {
+    await fetch("/api/grades", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -135,35 +137,28 @@ form.addEventListener("submit", async (e) => {
         units
       })
     });
+
+    form.reset();
+    loadGrades(); // refresh from DB
+
   } catch (err) {
     console.log(err);
   }
 });
 
 /* =========================
-   LOAD GRADES
+   DELETE (DATABASE ONLY)
 ========================= */
-async function loadGrades() {
+async function deleteGrade(id) {
   try {
-    const res = await fetch("https://grade-calculator-s7mr.onrender.com/api/grades");
-    const data = await res.json();
+    await fetch(`/api/grades/${id}`, {
+      method: "DELETE"
+    });
 
-    grades = Array.isArray(data) ? data : [];
-
-    render();
-
+    loadGrades();
   } catch (err) {
     console.log(err);
-    grades = [];
   }
-}
-
-/* =========================
-   DELETE GRADE
-========================= */
-function deleteGrade(id) {
-  grades = grades.filter(g => g.id !== id);
-  render();
 }
 
 /* =========================
@@ -188,7 +183,9 @@ function render() {
         <td>${grade.toFixed(2)}</td>
         <td>${units}</td>
         <td>
-          <button onclick="deleteGrade(${g.id})">Delete</button>
+          <button onclick="deleteGrade(${g.id})">
+            Delete
+          </button>
         </td>
       </tr>
     `;
@@ -199,13 +196,4 @@ function render() {
     : "0.00";
 
   averageDisplay.textContent = gwa;
-}
-
-/* =========================
-   AUTO LOGIN
-========================= */
-if (currentUser) {
-  loginBox.style.display = "none";
-  gradeSystem.style.display = "block";
-  loadGrades();
 }
