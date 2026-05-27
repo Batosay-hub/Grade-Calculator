@@ -21,13 +21,12 @@ const tableBody = document.getElementById("subjectTableBody");
 const averageDisplay = document.getElementById("averageGrade");
 
 /* =========================
-   USERS (LOCAL LOGIN ONLY)
+   LOGIN STATE (LOCAL ONLY)
 ========================= */
-let users = JSON.parse(localStorage.getItem("users")) || [];
 let currentUser = null;
 
 /* =========================
-   UI SWITCH
+   SWITCH UI
 ========================= */
 showRegister.onclick = () => {
   loginBox.style.display = "none";
@@ -40,8 +39,10 @@ backToLogin.onclick = () => {
 };
 
 /* =========================
-   REGISTER
+   REGISTER (LOCAL ONLY)
 ========================= */
+let users = JSON.parse(localStorage.getItem("users")) || [];
+
 registerForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
@@ -49,7 +50,7 @@ registerForm.addEventListener("submit", (e) => {
   const password = registerPassword.value.trim();
 
   if (users.find(u => u.username === username)) {
-    alert("Username exists");
+    alert("Username already exists");
     return;
   }
 
@@ -61,7 +62,7 @@ registerForm.addEventListener("submit", (e) => {
 });
 
 /* =========================
-   LOGIN
+   LOGIN (LOCAL ONLY)
 ========================= */
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -96,7 +97,7 @@ logoutBtn.onclick = () => {
 };
 
 /* =========================
-   LOAD GRADES (DB ONLY)
+   LOAD GRADES (DATABASE ONLY)
 ========================= */
 let grades = [];
 
@@ -112,7 +113,7 @@ async function loadGrades() {
 }
 
 /* =========================
-   ADD GRADE
+   ADD GRADE (DATABASE ONLY)
 ========================= */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -122,33 +123,46 @@ form.addEventListener("submit", async (e) => {
   const units = parseInt(unitsInput.value);
 
   if (!subject || isNaN(grade) || isNaN(units)) {
-    alert("Complete fields");
+    alert("Complete all fields");
     return;
   }
 
-  await fetch("/api/grades", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ subject, grade, units })
-  });
+  try {
+    await fetch("/api/grades", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subject,
+        grade,
+        units
+      })
+    });
 
-  form.reset();
-  loadGrades();
+    form.reset();
+    loadGrades(); // refresh from DB
+
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 /* =========================
-   SOFT DELETE
+   DELETE (DATABASE ONLY)
 ========================= */
 async function deleteGrade(id) {
-  await fetch(`/api/grades/${id}`, {
-    method: "DELETE"
-  });
+  try {
+    await fetch(`/api/grades/${id}`, {
+      method: "DELETE"
+    });
 
-  loadGrades();
+    loadGrades();
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 /* =========================
-   GWA CALCULATION
+   GWA CALCULATION (CORRECT)
 ========================= */
 function render() {
   tableBody.innerHTML = "";
@@ -169,7 +183,9 @@ function render() {
         <td>${grade.toFixed(2)}</td>
         <td>${units}</td>
         <td>
-          <button onclick="deleteGrade(${g.id})">Delete</button>
+          <button onclick="deleteGrade(${g.id})">
+            Delete
+          </button>
         </td>
       </tr>
     `;
