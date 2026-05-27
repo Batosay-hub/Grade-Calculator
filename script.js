@@ -115,6 +115,8 @@ loginForm.addEventListener("submit", function (e) {
     loginBox.style.display = "none";
     gradeSystem.style.display = "block";
 
+    loadGrades();
+
   } else {
 
     alert("Wrong username or password");
@@ -145,11 +147,19 @@ const unitsInput = document.getElementById("subjectUnits");
 const tableBody = document.getElementById("subjectTableBody");
 const averageDisplay = document.getElementById("averageGrade");
 
+/* =========================
+   ALLOWED GRADES
+========================= */
+
 const allowedGrades = [
   1.00, 1.25, 1.50, 1.75,
   2.00, 2.25, 2.50, 2.75,
   3.00, 4.00, 5.00
 ];
+
+/* =========================
+   LOCAL DATA
+========================= */
 
 let grades = [];
 
@@ -170,7 +180,7 @@ function getRemarks(g){
 }
 
 /* =========================
-   VALIDATION
+   VALIDATE GRADE
 ========================= */
 
 function isValidGrade(grade){
@@ -183,7 +193,7 @@ function isValidGrade(grade){
    ADD SUBJECT
 ========================= */
 
-form.addEventListener("submit", function(e){
+form.addEventListener("submit", async function(e){
 
   e.preventDefault();
 
@@ -205,22 +215,52 @@ form.addEventListener("submit", function(e){
 
   }
 
-  grades.push({
+  const newEntry = {
     id: Date.now(),
     subject,
     grade,
     units,
     remarks: getRemarks(grade)
-  });
+  };
+
+  grades.push(newEntry);
 
   updateTable();
 
   form.reset();
 
+  /* =========================
+     SAVE TO DATABASE
+  ========================= */
+
+  try {
+
+    await fetch("/api/grades", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        subject,
+        grade,
+        units
+      })
+
+    });
+
+  } catch(err){
+
+    console.error(err);
+
+  }
+
 });
 
 /* =========================
-   DELETE
+   DELETE GRADE
 ========================= */
 
 function deleteGrade(id){
@@ -268,5 +308,35 @@ function updateTable(){
     : "0.00";
 
   averageDisplay.textContent = avg;
+
+}
+
+/* =========================
+   LOAD DATABASE DATA
+========================= */
+
+async function loadGrades(){
+
+  try{
+
+    const response = await fetch("/api/grades");
+
+    const data = await response.json();
+
+    grades = data.map(item => ({
+      id: item.id,
+      subject: item.subject,
+      grade: parseFloat(item.grade),
+      units: parseInt(item.units),
+      remarks: getRemarks(parseFloat(item.grade))
+    }));
+
+    updateTable();
+
+  } catch(err){
+
+    console.error(err);
+
+  }
 
 }
