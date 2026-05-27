@@ -16,19 +16,30 @@ const pool = new Pool({
 });
 
 /* =========================
+   TRUST PROXY (IMPORTANT FOR RENDER)
+========================= */
+app.set("trust proxy", 1);
+
+/* =========================
    MIDDLEWARE
 ========================= */
+
 app.use(cors({
-  origin: true,
+  origin: "https://grade-calculator-s7mr.onrender.com",
   credentials: true
 }));
 
 app.use(express.json());
 
+/* SESSION FIXED FOR RENDER */
 app.use(session({
   secret: "grade-secret-key",
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    secure: true,
+    sameSite: "none"
+  }
 }));
 
 app.use(express.static(__dirname));
@@ -63,7 +74,7 @@ app.post("/api/register", async (req, res) => {
 });
 
 /* =========================
-   LOGIN (AUTO SESSION)
+   LOGIN (SETS SESSION)
 ========================= */
 app.post("/api/login", async (req, res) => {
   try {
@@ -78,10 +89,12 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid Login" });
     }
 
-    // AUTO LOGIN SESSION
     req.session.user = username;
 
-    res.json({ success: true });
+    res.json({
+      success: true,
+      username
+    });
 
   } catch (err) {
     console.log(err);
@@ -90,7 +103,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 /* =========================
-   SAVE GRADE (NO USERNAME INPUT)
+   SAVE GRADE (SESSION BASED)
 ========================= */
 app.post("/api/grades", async (req, res) => {
   try {
@@ -117,7 +130,7 @@ app.post("/api/grades", async (req, res) => {
 });
 
 /* =========================
-   GET GRADES (AUTO USER)
+   GET GRADES (SESSION BASED)
 ========================= */
 app.get("/api/grades", async (req, res) => {
   try {
