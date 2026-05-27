@@ -1,132 +1,214 @@
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Arial, Helvetica, sans-serif;
-}
+/* =========================
+   GENERAL
+========================= */
 
 body{
-  background:#e8f5e9;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:20px;
+  font-family: Arial, sans-serif;
+
+  background-image: url("93cb5103-6f32-4407-9840-38ff6abc4231.jpg");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  margin: 0;
+  padding: 20px;
 }
 
-/* LOGIN */
+/* =========================
+   LOGIN / REGISTER
+========================= */
 
 .login-container{
-  width:100%;
-  max-width:400px;
-  background:white;
-  padding:30px;
-  border-radius:12px;
-  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+  width: 350px;
+  margin: 80px auto;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(5px);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
 }
 
 .login-container h1{
-  text-align:center;
-  margin-bottom:20px;
-  color:#2e7d32;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #16a34a;
 }
 
 .login-container input{
-  width:100%;
-  padding:12px;
-  margin-bottom:15px;
-  border:1px solid #ccc;
-  border-radius:6px;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
 .login-container button{
-  width:100%;
-  padding:12px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #16a34a;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
-/* GRADE SYSTEM */
+.login-container button:hover{
+  background: #15803d;
+  transform: scale(1.02);
+}
+
+/* =========================
+   MAIN CONTAINER
+========================= */
 
 .container{
-  display:none;
-  width:100%;
-  max-width:900px;
-  background:white;
-  padding:30px;
-  border-radius:12px;
-  box-shadow:0 5px 15px rgba(0,0,0,0.1);
-  position:relative;
+  max-width: 950px;
+  margin: auto;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(5px);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
 }
 
 .top-image{
-  position:absolute;
-  top:15px;
-  left:15px;
-  width:80px;
-  border-radius:10px;
+  width: 120px;
+  display: block;
+  margin: auto;
 }
 
 header{
-  text-align:center;
-  margin-bottom:30px;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 header h1{
-  color:#2e7d32;
-  margin-bottom:10px;
+  color: #16a34a;
 }
 
-form{
-  display:flex;
-  gap:10px;
-  margin-bottom:25px;
-  flex-wrap:wrap;
+/* =========================
+   FORM
+========================= */
+
+#studentForm{
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
-input{
-  flex:1;
-  padding:10px;
-  border:1px solid #ccc;
-  border-radius:6px;
+#studentForm input{
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }
 
-button{
-  padding:10px 15px;
-  border:none;
-  background:#2e7d32;
-  color:white;
-  border-radius:6px;
-  cursor:pointer;
+#studentForm button{
+  padding: 12px 20px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
 }
 
-button:hover{
-  background:#1b5e20;
+#studentForm button:hover{
+  background: #15803d;
+  transform: scale(1.02);
 }
+
+/* =========================
+   TABLE
+========================= */
 
 table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
 }
 
 table th,
 table td{
-  border:1px solid #ccc;
-  padding:10px;
-  text-align:center;
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
 }
 
 table th{
-  background:#2e7d32;
-  color:white;
+  background: #16a34a;
+  color: white;
 }
+
+/* =========================
+   DELETE BUTTON
+========================= */
+
+.delete-btn{
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.delete-btn:hover{
+  background: #15803d;
+  transform: scale(1.05);
+}
+
+/* =========================
+   AVERAGE SECTION
+========================= */
 
 .average-section{
-  margin-top:25px;
-  text-align:center;
+  text-align: center;
+  margin-top: 25px;
 }
 
-.average-section p{
-  font-size:30px;
-  color:#2e7d32;
-  font-weight:bold;
+.average-section h2{
+  margin-bottom: 10px;
+  color: #16a34a;
+}
+
+#averageGrade{
+  font-size: 32px;
+  font-weight: bold;
+  color: #16a34a;
+}
+
+/* =========================
+   LOGOUT BUTTON
+========================= */
+
+.logout-btn{
+  width: 100%;
+  margin-top: 30px;
+  padding: 14px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover{
+  background: #15803d;
+  transform: scale(1.02);
 }

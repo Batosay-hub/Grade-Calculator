@@ -10,23 +10,50 @@
 
 <body>
 
-  <!-- LOGIN -->
+  <!-- LOGIN PAGE -->
   <div class="login-container" id="loginBox">
 
     <h1>Login</h1>
 
     <form id="loginForm">
-      <input type="text" id="username" placeholder="Username" required>
 
-      <input type="password" id="password" placeholder="Password" required>
+      <input type="text" id="loginUsername" placeholder="Username" required>
+
+      <input type="password" id="loginPassword" placeholder="Password" required>
 
       <button type="submit">Login</button>
+
+      <button type="button" id="showRegister">
+        Create Account
+      </button>
+
+    </form>
+
+  </div>
+
+  <!-- REGISTER PAGE -->
+  <div class="login-container" id="registerBox" style="display:none;">
+
+    <h1>Create Account</h1>
+
+    <form id="registerForm">
+
+      <input type="text" id="registerUsername" placeholder="Username" required>
+
+      <input type="password" id="registerPassword" placeholder="Password" required>
+
+      <button type="submit">Register</button>
+
+      <button type="button" id="backToLogin">
+        Back to Login
+      </button>
+
     </form>
 
   </div>
 
   <!-- GRADE SYSTEM -->
-  <div class="container" id="gradeSystem">
+  <div class="container" id="gradeSystem" style="display:none;">
 
     <img src="plsp.jpg" class="top-image" alt="Logo">
 
@@ -48,22 +75,29 @@
     </form>
 
     <table>
+
       <thead>
         <tr>
           <th>Subject</th>
           <th>Grade</th>
           <th>Units</th>
           <th>Remarks</th>
+          <th>Action</th>
         </tr>
       </thead>
 
       <tbody id="subjectTableBody"></tbody>
+
     </table>
 
     <section class="average-section">
       <h2>Average Grade</h2>
       <p id="averageGrade">0.00</p>
     </section>
+
+    <button id="logoutBtn" class="logout-btn">
+      Logout
+    </button>
 
   </div>
 
