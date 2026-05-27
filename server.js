@@ -55,6 +55,13 @@ app.post("/api/grades", async (req, res) => {
   }
 });
 
+async function deleteGrade(id) {
+  await fetch(`/grades/${id}`, {
+    method: "DELETE"
+  });
+
+  loadGrades(); // refresh table
+}
 /* START */
 const PORT = process.env.PORT || 10000;
 
