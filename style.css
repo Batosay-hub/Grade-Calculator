@@ -208,6 +208,15 @@ table th{
   transition: 0.3s;
 }
 
+table button {
+  background-color: inherit;
+  color: inherit;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
 .logout-btn:hover{
   background: #15803d;
   transform: scale(1.02);

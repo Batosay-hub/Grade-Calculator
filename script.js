@@ -183,9 +183,9 @@ function render() {
         <td>${grade.toFixed(2)}</td>
         <td>${units}</td>
         <td>
-          <button onclick="deleteGrade(${g.id})">
-            Delete
-          </button>
+        <td>
+        <button onclick="deleteGrade(${id})">Delete</button>
+      </td>
         </td>
       </tr>
     `;
