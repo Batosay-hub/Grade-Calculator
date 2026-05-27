@@ -1,15 +1,12 @@
-// script.js
-
 /* =========================
-   USERS STORAGE
+   USERS (LOCAL LOGIN ONLY)
 ========================= */
-
 let users = JSON.parse(localStorage.getItem("users")) || [];
+let currentUser = null;
 
 /* =========================
    ELEMENTS
 ========================= */
-
 const loginBox = document.getElementById("loginBox");
 const registerBox = document.getElementById("registerBox");
 const gradeSystem = document.getElementById("gradeSystem");
@@ -19,337 +16,182 @@ const registerForm = document.getElementById("registerForm");
 
 const showRegister = document.getElementById("showRegister");
 const backToLogin = document.getElementById("backToLogin");
-
 const logoutBtn = document.getElementById("logoutBtn");
 
 const form = document.getElementById("studentForm");
-
 const subjectInput = document.getElementById("subjectName");
 const gradeInput = document.getElementById("subjectGrade");
 const unitsInput = document.getElementById("subjectUnits");
-
 const tableBody = document.getElementById("subjectTableBody");
 const averageDisplay = document.getElementById("averageGrade");
 
 /* =========================
-   GRADES ARRAY
+   SWITCH UI
 ========================= */
-
-let grades = [];
-
-/* =========================
-   SWITCH PAGES
-========================= */
-
-showRegister.addEventListener("click", () => {
-
+showRegister.onclick = () => {
   loginBox.style.display = "none";
   registerBox.style.display = "block";
+};
 
-});
-
-backToLogin.addEventListener("click", () => {
-
+backToLogin.onclick = () => {
   registerBox.style.display = "none";
   loginBox.style.display = "block";
-
-});
+};
 
 /* =========================
    REGISTER
 ========================= */
-
 registerForm.addEventListener("submit", (e) => {
-
   e.preventDefault();
 
-  const username = document
-    .getElementById("registerUsername")
-    .value
-    .trim();
+  const username = registerUsername.value.trim();
+  const password = registerPassword.value.trim();
 
-  const password = document
-    .getElementById("registerPassword")
-    .value
-    .trim();
-
-  const existingUser = users.find(
-    user => user.username === username
-  );
-
-  if (existingUser) {
-
+  if (users.find(u => u.username === username)) {
     alert("Username already exists");
     return;
-
   }
 
-  users.push({
-    username,
-    password
-  });
-
-  localStorage.setItem(
-    "users",
-    JSON.stringify(users)
-  );
+  users.push({ username, password });
+  localStorage.setItem("users", JSON.stringify(users));
 
   alert("Account created");
-
   registerForm.reset();
-
-  registerBox.style.display = "none";
-  loginBox.style.display = "block";
-
 });
 
 /* =========================
    LOGIN
 ========================= */
-
-loginForm.addEventListener("submit", async (e) => {
-
+loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const username = document
-    .getElementById("loginUsername")
-    .value
-    .trim();
+  const username = loginUsername.value.trim();
+  const password = loginPassword.value.trim();
 
-  const password = document
-    .getElementById("loginPassword")
-    .value
-    .trim();
-
-  const validUser = users.find(
-    user =>
-      user.username === username &&
-      user.password === password
+  const valid = users.find(
+    u => u.username === username && u.password === password
   );
 
-  if (
-    validUser ||
-    (username === "admin" && password === "123")
-  ) {
-
-    localStorage.setItem(
-      "currentUser",
-      username
-    );
+  if (valid || (username === "admin" && password === "123")) {
+    currentUser = username;
 
     loginBox.style.display = "none";
     gradeSystem.style.display = "block";
 
-    await loadGrades();
-
+    loadGrades();
   } else {
-
     alert("Wrong username or password");
-
   }
-
 });
 
 /* =========================
    LOGOUT
 ========================= */
-
-logoutBtn.addEventListener("click", () => {
-
-  localStorage.removeItem("currentUser");
-
+logoutBtn.onclick = () => {
+  currentUser = null;
   gradeSystem.style.display = "none";
   loginBox.style.display = "block";
-
-});
-
-/* =========================
-   REMARKS
-========================= */
-
-function getRemarks(g) {
-
-  if (g <= 1.25) return "Excellent";
-  if (g <= 1.75) return "Very Good";
-  if (g <= 2.25) return "Good";
-  if (g <= 2.75) return "Satisfactory";
-  if (g <= 3.00) return "Passed";
-  if (g === 4.00) return "Conditional";
-
-  return "Failed";
-
-}
+};
 
 /* =========================
-   LOAD GRADES
+   GRADES ARRAY
 ========================= */
-
-async function loadGrades() {
-
-  try {
-
-    const res = await fetch("/api/grades/get", {
-
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json"
-      },
-
-      body: JSON.stringify({
-        username: localStorage.getItem("currentUser")
-      })
-
-    });
-
-    const data = await res.json();
-
-    if (!Array.isArray(data)) {
-
-      grades = [];
-      updateTable();
-      return;
-
-    }
-
-    grades = data.map(g => ({
-      ...g,
-      remarks: getRemarks(parseFloat(g.grade))
-    }));
-
-    updateTable();
-
-  } catch (err) {
-
-    console.log(err);
-
-    grades = [];
-    updateTable();
-
-  }
-
-}
+let grades = [];
 
 /* =========================
-   ADD GRADE
+   ADD GRADE (SAVE TO DB)
 ========================= */
-
 form.addEventListener("submit", async (e) => {
-
   e.preventDefault();
 
   const subject = subjectInput.value.trim();
+  const grade = parseFloat(gradeInput.value);
+  const units = parseInt(unitsInput.value);
 
-  const grade = parseFloat(
-    gradeInput.value
-  );
-
-  const units = parseInt(
-    unitsInput.value
-  );
-
-  if (
-    !subject ||
-    isNaN(grade) ||
-    isNaN(units)
-  ) {
-
+  if (!subject || isNaN(grade) || isNaN(units)) {
     alert("Complete all fields");
     return;
-
   }
 
-  const newEntry = {
-
+  const newGrade = {
     id: Date.now(),
     subject,
     grade,
-    units,
-    remarks: getRemarks(grade)
-
+    units
   };
 
-  grades.push(newEntry);
-
-  updateTable();
+  grades.push(newGrade);
+  render();
 
   form.reset();
 
   try {
-
-    await fetch("/api/grades", {
-
+    await fetch("https://grade-calculator-s7mr.onrender.com/api/grades", {
       method: "POST",
-
-      headers: {
-        "Content-Type": "application/json"
-      },
-
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-
-        username: localStorage.getItem("currentUser"),
         subject,
         grade,
         units
-
       })
-
     });
-
   } catch (err) {
-
     console.log(err);
-
   }
-
 });
 
 /* =========================
-   DELETE
+   LOAD GRADES
 ========================= */
+async function loadGrades() {
+  try {
+    const res = await fetch("https://grade-calculator-s7mr.onrender.com/api/grades");
+    const data = await res.json();
 
-function deleteGrade(id) {
+    grades = Array.isArray(data) ? data : [];
 
-  grades = grades.filter(
-    item => item.id !== id
-  );
+    render();
 
-  updateTable();
-
+  } catch (err) {
+    console.log(err);
+    grades = [];
+  }
 }
 
 /* =========================
-   UPDATE TABLE + GWA
+   DELETE GRADE
 ========================= */
+function deleteGrade(id) {
+  grades = grades.filter(g => g.id !== id);
+  render();
+}
 
-function updateTable() {
-
+/* =========================
+   GWA CALCULATION (CORRECT)
+========================= */
+function render() {
   tableBody.innerHTML = "";
 
   let totalWeighted = 0;
   let totalUnits = 0;
 
-  grades.forEach(item => {
+  grades.forEach(g => {
+    const grade = Number(g.grade);
+    const units = Number(g.units);
 
-    totalWeighted +=
-      item.grade * item.units;
-
-    totalUnits += item.units;
+    totalWeighted += grade * units;
+    totalUnits += units;
 
     tableBody.innerHTML += `
       <tr>
-        <td>${item.subject}</td>
-        <td>${parseFloat(item.grade).toFixed(2)}</td>
-        <td>${item.units}</td>
-        <td>${item.remarks}</td>
+        <td>${g.subject}</td>
+        <td>${grade.toFixed(2)}</td>
+        <td>${units}</td>
         <td>
-          <button onclick="deleteGrade(${item.id})">
-            Delete
-          </button>
+          <button onclick="deleteGrade(${g.id})">Delete</button>
         </td>
       </tr>
     `;
-
   });
 
   const gwa = totalUnits > 0
@@ -357,5 +199,13 @@ function updateTable() {
     : "0.00";
 
   averageDisplay.textContent = gwa;
+}
 
+/* =========================
+   AUTO LOGIN
+========================= */
+if (currentUser) {
+  loginBox.style.display = "none";
+  gradeSystem.style.display = "block";
+  loadGrades();
 }
