@@ -58,25 +58,10 @@ app.post("/api/grades", async (req, res) => {
 });
 
 /* ✅ DELETE GRADE (THIS FIXES YOUR DELETE BUTTON) */
-app.delete("/api/grades/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
+app.delete("/api/grades/:id", (req, res) => {
+  console.log("🔥 DELETE ROUTE HIT");
 
-    console.log("🔥 DELETE HIT (SOFT MODE):", id);
-
-    const result = await pool.query(
-      "UPDATE grades SET deleted = TRUE WHERE id = $1 RETURNING *",
-      [id]
-    );
-
-    console.log("UPDATED ROW:", result.rows);
-
-    res.json({ success: true, data: result.rows[0] });
-
-  } catch (err) {
-    console.log("DELETE ERROR:", err);
-    res.status(500).json({ error: "db error" });
-  }
+  res.json({ message: "route works" });
 });
 
 /* START */
