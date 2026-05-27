@@ -62,6 +62,8 @@ app.delete("/api/grades/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
+    console.log("SOFT DELETE TRIGGERED ID:", id);
+
     await pool.query(
       "UPDATE grades SET deleted = TRUE WHERE id = $1",
       [id]
