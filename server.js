@@ -62,21 +62,22 @@ app.delete("/api/grades/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    console.log("SOFT DELETE TRIGGERED ID:", id);
+    console.log("🔥 DELETE HIT (SOFT MODE):", id);
 
-    await pool.query(
-      "UPDATE grades SET deleted = TRUE WHERE id = $1",
+    const result = await pool.query(
+      "UPDATE grades SET deleted = TRUE WHERE id = $1 RETURNING *",
       [id]
     );
 
-    res.json({ success: true });
+    console.log("UPDATED ROW:", result.rows);
+
+    res.json({ success: true, data: result.rows[0] });
 
   } catch (err) {
-    console.log(err);
+    console.log("DELETE ERROR:", err);
     res.status(500).json({ error: "db error" });
   }
 });
-
 
 /* START */
 const PORT = process.env.PORT || 10000;
