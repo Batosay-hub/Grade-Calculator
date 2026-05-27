@@ -1,3 +1,5 @@
+// server.js
+
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
@@ -7,35 +9,63 @@ const app = express();
 /* =========================
    DATABASE
 ========================= */
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 /* =========================
    MIDDLEWARE
 ========================= */
-app.use(cors({
-  origin: "https://grade-calculator-s7mr.onrender.com"
-}));
 
+app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
 /* =========================
+   CREATE TABLES
+========================= */
+
+pool.query(`
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL
+);
+`);
+
+pool.query(`
+CREATE TABLE IF NOT EXISTS grades (
+  id SERIAL PRIMARY KEY,
+  username TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  grade NUMERIC NOT NULL,
+  units INT NOT NULL
+);
+`);
+
+/* =========================
    REGISTER
 ========================= */
+
 app.post("/api/register", async (req, res) => {
+
   try {
+
     const { username, password } = req.body;
 
-    const check = await pool.query(
+    const existing = await pool.query(
       "SELECT * FROM users WHERE username=$1",
       [username]
     );
 
-    if (check.rows.length > 0) {
-      return res.status(400).json({ error: "Username exists" });
+    if (existing.rows.length > 0) {
+      return res.status(400).json({
+        error: "Username already exists"
+      });
     }
 
     await pool.query(
@@ -43,19 +73,30 @@ app.post("/api/register", async (req, res) => {
       [username, password]
     );
 
-    res.json({ success: true });
+    res.json({
+      success: true
+    });
 
   } catch (err) {
+
     console.log(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server Error"
+    });
+
   }
+
 });
 
 /* =========================
    LOGIN
 ========================= */
+
 app.post("/api/login", async (req, res) => {
+
   try {
+
     const { username, password } = req.body;
 
     const result = await pool.query(
@@ -64,43 +105,76 @@ app.post("/api/login", async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: "Invalid login" });
+
+      return res.status(401).json({
+        error: "Invalid Login"
+      });
+
     }
 
-    res.json({ success: true, username });
+    res.json({
+      success: true,
+      username
+    });
 
   } catch (err) {
+
     console.log(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server Error"
+    });
+
   }
+
 });
 
 /* =========================
-   SAVE GRADES
+   SAVE GRADE
 ========================= */
+
 app.post("/api/grades", async (req, res) => {
+
   try {
-    const { username, subject, grade, units } = req.body;
+
+    const {
+      username,
+      subject,
+      grade,
+      units
+    } = req.body;
 
     await pool.query(
-      `INSERT INTO grades (username, subject, grade, units)
-       VALUES ($1,$2,$3,$4)`,
+      `INSERT INTO grades
+      (username, subject, grade, units)
+      VALUES($1,$2,$3,$4)`,
       [username, subject, grade, units]
     );
 
-    res.json({ success: true });
+    res.json({
+      success: true
+    });
 
   } catch (err) {
+
     console.log(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server Error"
+    });
+
   }
+
 });
 
 /* =========================
-   GET GRADES
+   LOAD GRADES
 ========================= */
+
 app.post("/api/grades/get", async (req, res) => {
+
   try {
+
     const { username } = req.body;
 
     const result = await pool.query(
@@ -113,14 +187,29 @@ app.post("/api/grades/get", async (req, res) => {
     res.json(result.rows);
 
   } catch (err) {
+
     console.log(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: "Server Error"
+    });
+
   }
+
 });
 
 /* =========================
-   START
+   HOME
 ========================= */
+
+app.get("/", (req, res) => {
+  res.send("Server Running");
+});
+
+/* =========================
+   START SERVER
+========================= */
+
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
