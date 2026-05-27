@@ -9,9 +9,7 @@ const app = express();
 ========================= */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: { rejectUnauthorized: false }
 });
 
 /* =========================
@@ -25,7 +23,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 /* =========================
-   REGISTER (OPTIONAL)
+   REGISTER
 ========================= */
 app.post("/api/register", async (req, res) => {
   try {
@@ -37,11 +35,11 @@ app.post("/api/register", async (req, res) => {
     );
 
     if (check.rows.length > 0) {
-      return res.status(400).json({ error: "Username already exists" });
+      return res.status(400).json({ error: "Username exists" });
     }
 
     await pool.query(
-      "INSERT INTO users(username, password) VALUES($1, $2)",
+      "INSERT INTO users(username,password) VALUES($1,$2)",
       [username, password]
     );
 
@@ -54,7 +52,7 @@ app.post("/api/register", async (req, res) => {
 });
 
 /* =========================
-   LOGIN (NO SESSION - SIMPLE)
+   LOGIN
 ========================= */
 app.post("/api/login", async (req, res) => {
   try {
@@ -69,10 +67,7 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid login" });
     }
 
-    res.json({
-      success: true,
-      username
-    });
+    res.json({ success: true, username });
 
   } catch (err) {
     console.log(err);
@@ -81,19 +76,15 @@ app.post("/api/login", async (req, res) => {
 });
 
 /* =========================
-   SAVE GRADE
+   SAVE GRADES
 ========================= */
 app.post("/api/grades", async (req, res) => {
   try {
     const { username, subject, grade, units } = req.body;
 
-    if (!username) {
-      return res.status(400).json({ error: "Missing username" });
-    }
-
     await pool.query(
       `INSERT INTO grades (username, subject, grade, units)
-       VALUES ($1, $2, $3, $4)`,
+       VALUES ($1,$2,$3,$4)`,
       [username, subject, grade, units]
     );
 
@@ -112,10 +103,6 @@ app.post("/api/grades/get", async (req, res) => {
   try {
     const { username } = req.body;
 
-    if (!username) {
-      return res.status(400).json({ error: "Missing username" });
-    }
-
     const result = await pool.query(
       `SELECT * FROM grades
        WHERE username=$1
@@ -132,14 +119,7 @@ app.post("/api/grades/get", async (req, res) => {
 });
 
 /* =========================
-   TEST ROUTE
-========================= */
-app.get("/", (req, res) => {
-  res.send("Server Running");
-});
-
-/* =========================
-   START SERVER
+   START
 ========================= */
 const PORT = process.env.PORT || 10000;
 
