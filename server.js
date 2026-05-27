@@ -1,12 +1,11 @@
 const express = require("express");
 const cors = require("cors");
-const session = require("express-session");
 const { Pool } = require("pg");
 
 const app = express();
 
 /* =========================
-   DATABASE CONNECTION
+   DATABASE
 ========================= */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -16,52 +15,33 @@ const pool = new Pool({
 });
 
 /* =========================
-   TRUST PROXY (IMPORTANT FOR RENDER)
-========================= */
-app.set("trust proxy", 1);
-
-/* =========================
    MIDDLEWARE
 ========================= */
-
 app.use(cors({
-  origin: "https://grade-calculator-s7mr.onrender.com",
-  credentials: true
+  origin: "https://grade-calculator-s7mr.onrender.com"
 }));
 
 app.use(express.json());
-
-/* SESSION FIXED FOR RENDER */
-app.use(session({
-  secret: "grade-secret-key",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: true,
-    sameSite: "none"
-  }
-}));
-
 app.use(express.static(__dirname));
 
 /* =========================
-   REGISTER
+   REGISTER (OPTIONAL)
 ========================= */
 app.post("/api/register", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const existing = await pool.query(
+    const check = await pool.query(
       "SELECT * FROM users WHERE username=$1",
       [username]
     );
 
-    if (existing.rows.length > 0) {
+    if (check.rows.length > 0) {
       return res.status(400).json({ error: "Username already exists" });
     }
 
     await pool.query(
-      "INSERT INTO users(username,password) VALUES($1,$2)",
+      "INSERT INTO users(username, password) VALUES($1, $2)",
       [username, password]
     );
 
@@ -69,12 +49,12 @@ app.post("/api/register", async (req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 /* =========================
-   LOGIN (SETS SESSION)
+   LOGIN (NO SESSION - SIMPLE)
 ========================= */
 app.post("/api/login", async (req, res) => {
   try {
@@ -86,10 +66,8 @@ app.post("/api/login", async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: "Invalid Login" });
+      return res.status(401).json({ error: "Invalid login" });
     }
-
-    req.session.user = username;
 
     res.json({
       success: true,
@@ -98,22 +76,20 @@ app.post("/api/login", async (req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 /* =========================
-   SAVE GRADE (SESSION BASED)
+   SAVE GRADE
 ========================= */
 app.post("/api/grades", async (req, res) => {
   try {
-    const username = req.session.user;
+    const { username, subject, grade, units } = req.body;
 
     if (!username) {
-      return res.status(401).json({ error: "Not logged in" });
+      return res.status(400).json({ error: "Missing username" });
     }
-
-    const { subject, grade, units } = req.body;
 
     await pool.query(
       `INSERT INTO grades (username, subject, grade, units)
@@ -125,19 +101,19 @@ app.post("/api/grades", async (req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 /* =========================
-   GET GRADES (SESSION BASED)
+   GET GRADES
 ========================= */
-app.get("/api/grades", async (req, res) => {
+app.post("/api/grades/get", async (req, res) => {
   try {
-    const username = req.session.user;
+    const { username } = req.body;
 
     if (!username) {
-      return res.status(401).json({ error: "Not logged in" });
+      return res.status(400).json({ error: "Missing username" });
     }
 
     const result = await pool.query(
@@ -151,7 +127,7 @@ app.get("/api/grades", async (req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ error: "Server error" });
   }
 });
 

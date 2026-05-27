@@ -1,6 +1,6 @@
 
 /* =========================
-   USERS STORAGE
+   USERS STORAGE (LOCAL ONLY)
 ========================= */
 let users = JSON.parse(localStorage.getItem("users")) || [];
 
@@ -27,7 +27,7 @@ const tableBody = document.getElementById("subjectTableBody");
 const averageDisplay = document.getElementById("averageGrade");
 
 /* =========================
-   SWITCH PAGES
+   SWITCH UI
 ========================= */
 showRegister.addEventListener("click", () => {
   loginBox.style.display = "none";
@@ -40,7 +40,7 @@ backToLogin.addEventListener("click", () => {
 });
 
 /* =========================
-   REGISTER
+   REGISTER (LOCAL ONLY)
 ========================= */
 registerForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -99,11 +99,6 @@ logoutBtn.addEventListener("click", () => {
 });
 
 /* =========================
-   LOCAL DATA
-========================= */
-let grades = [];
-
-/* =========================
    REMARKS
 ========================= */
 function getRemarks(g) {
@@ -117,7 +112,7 @@ function getRemarks(g) {
 }
 
 /* =========================
-   ADD SUBJECT + SAVE TO DB
+   ADD GRADE
 ========================= */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -141,15 +136,12 @@ form.addEventListener("submit", async (e) => {
 
   grades.push(newEntry);
   updateTable();
-
   form.reset();
 
   try {
     await fetch("/api/grades", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: localStorage.getItem("currentUser"),
         subject,
@@ -169,9 +161,7 @@ async function loadGrades() {
   try {
     const res = await fetch("/api/grades/get", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: localStorage.getItem("currentUser")
       })
@@ -200,7 +190,12 @@ function deleteGrade(id) {
 }
 
 /* =========================
-   UPDATE TABLE (CORRECT GWA)
+   GRADE DATA
+========================= */
+let grades = [];
+
+/* =========================
+   UPDATE TABLE + CORRECT GWA
 ========================= */
 function updateTable() {
   tableBody.innerHTML = "";
