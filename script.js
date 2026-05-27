@@ -150,6 +150,8 @@ form.addEventListener("submit", async (e) => {
    DELETE (DATABASE ONLY)
 ========================= */
 async function deleteGrade(id) {
+  if (!id) return;
+
   try {
     await fetch(`/api/grades/${id}`, {
       method: "DELETE"
