@@ -29,7 +29,9 @@ app.get("/", (req, res) => {
 /* GET GRADES */
 app.get("/api/grades", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM grades");
+    const result = await pool.query(
+      "SELECT * FROM grades WHERE deleted = FALSE OR deleted IS NULL"
+    );
     res.json(result.rows);
   } catch (err) {
     console.log(err);
@@ -60,7 +62,10 @@ app.delete("/api/grades/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    await pool.query("DELETE FROM grades WHERE id = $1", [id]);
+    await pool.query(
+      "UPDATE grades SET deleted = TRUE WHERE id = $1",
+      [id]
+    );
 
     res.json({ success: true });
 
