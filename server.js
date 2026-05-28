@@ -64,7 +64,7 @@ app.post("/api/grades", async (req, res) => {
     }
 
     await pool.query(
-      "INSERT INTO grades(subject, grade, units, username) VALUES($1,$2,$3)",
+      "INSERT INTO grades(subject, grade, units, username) VALUES($1,$2,$3,$4)",
       [subject, grade, units, username]
     );
 
