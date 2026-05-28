@@ -27,12 +27,20 @@ app.get("/", (req, res) => {
 });
 
 /* GET GRADES */
-app.get("/api/grades", async (req, res) => {
+app.get("/api/grades/:username", async (req, res) => {
   try {
+    const { username } = req.params;
+
     const result = await pool.query(
-      "SELECT * FROM grades WHERE deleted = FALSE OR deleted IS NULL"
+      `SELECT * FROM grades
+       WHERE username = $1
+       AND (deleted = FALSE OR deleted IS NULL)
+       ORDER BY id ASC`,
+      [username]
     );
+
     res.json(result.rows);
+
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "db error" });
@@ -42,7 +50,7 @@ app.get("/api/grades", async (req, res) => {
 /* SAVE GRADE */
 app.post("/api/grades", async (req, res) => {
   try {
-    const { subject, grade, units } = req.body;
+    const { subject, grade, units, username } = req.body;
 
     const allowedGrades = [
       1, 1.25, 1.5, 1.75,
@@ -56,8 +64,8 @@ app.post("/api/grades", async (req, res) => {
     }
 
     await pool.query(
-      "INSERT INTO grades(subject, grade, units) VALUES($1,$2,$3)",
-      [subject, grade, units]
+      "INSERT INTO grades(subject, grade, units, username) VALUES($1,$2,$3)",
+      [subject, grade, units, username]
     );
 
     res.json({ success: true });
@@ -67,6 +75,7 @@ app.post("/api/grades", async (req, res) => {
     res.status(500).json({ error: "db error" });
   }
 });
+
 
 /* ✅ DELETE GRADE (THIS FIXES YOUR DELETE BUTTON) */
 app.delete("/api/grades/:id", async (req, res) => {

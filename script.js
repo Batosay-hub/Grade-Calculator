@@ -103,7 +103,7 @@ let grades = [];
 
 async function loadGrades() {
   try {
-    const res = await fetch("/api/grades");
+    const res = await fetch(`/api/grades/${currentUser}`);
     grades = await res.json();
 
     render();
@@ -146,7 +146,8 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({
         subject,
         grade,
-        units
+        units,
+        username: currentUser
       })
     });
 
