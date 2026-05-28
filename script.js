@@ -103,6 +103,7 @@ let grades = [];
 
 async function loadGrades() {
   try {
+    if (!currentUser) return;
     const res = await fetch(`/api/grades/${currentUser}`);
     grades = await res.json();
 
